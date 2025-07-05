@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCycle Global - Qlobal Təkrar Emal Platforması</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React və ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel CDN - JSX kodunu brauzerdə işlətmək üçün -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Inter fontunu yükləyin -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Ana komponent - Tətbiqin əsas strukturunu idarə edir
+        const App = () => {
+            // İstifadəçinin daxil olub-olmadığını göstərir
+            const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+            // Daxil olan istifadəçinin rolunu saxlayır (məsələn, 'factory', 'businessman', 'smallSeller', 'sponsor', 'deviceSeller')
+            const [userRole, setUserRole] = React.useState(null);
+            // Daxil olan istifadəçinin adını saxlayır
+            const [userName, setUserName] = React.useState('');
+            // Cari səhifəni idarə edir ('home', 'auth', 'dashboard')
+            const [currentPage, setCurrentPage] = React.useState('home');
+
+            // İstifadəçi daxil olduqda çağırılır
+            const handleLogin = (role, name) => {
+                setIsLoggedIn(true);
+                setUserRole(role);
+                setUserName(name);
+                setCurrentPage('dashboard'); // Daxil olduqdan sonra idarəetmə panelinə yönləndir
+            };
+
+            // İstifadəçi qeydiyyatdan keçdikdə çağırılır
+            const handleRegister = (role, name) => {
+                // Qeydiyyatdan sonra avtomatik daxil olaraq qəbul edirik
+                handleLogin(role, name);
+            };
+
+            // İstifadəçi çıxış etdikdə çağırılır
+            const handleLogout = () => {
+                setIsLoggedIn(false);
+                setUserRole(null);
+                setUserName('');
+                setCurrentPage('home'); // Çıxış etdikdən sonra ana səhifəyə yönləndir
+            };
+
+            // Səhifələr arasında keçid funksiyası
+            const navigateTo = (page) => {
+                setCurrentPage(page);
+            };
+
+            // Hansı səhifənin göstəriləcəyini müəyyən edir
+            const renderPage = () => {
+                if (!isLoggedIn) {
+                    if (currentPage === 'auth') {
+                        return <AuthPage onLogin={handleLogin} onRegister={handleRegister} onNavigateToHome={() => navigateTo('home')} />;
+                    }
+                    return <HomePage isLoggedIn={isLoggedIn} onNavigateToAuth={() => navigateTo('auth')} />;
+                } else {
+                    if (currentPage === 'dashboard') {
+                        return <DashboardPage userRole={userRole} userName={userName} onLogout={handleLogout} />;
+                    }
+                    return <HomePage isLoggedIn={isLoggedIn} onNavigateToDashboard={() => navigateTo('dashboard')} />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
+                    {/* Ümumi Başlıq */}
+                    <header className="bg-white shadow-md p-4 flex justify-between items-center">
+                        <h1 className="text-3xl font-bold text-green-700">EcoCycle Global</h1>
+                        <nav>
+                            {isLoggedIn ? (
+                                <button
+                                    onClick={handleLogout}
+                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                                >
+                                    Çıxış
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => navigateTo('auth')}
+                                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                                >
+                                    Giriş / Qeydiyyat
+                                </button>
+                            )}
+                        </nav>
+                    </header>
+
+                    {/* Səhifə Kontenti */}
+                    <main className="container mx-auto p-4 py-8">
+                        {renderPage()}
+                    </main>
+
+                    {/* Ümumi Altlıq */}
+                    <footer className="bg-gray-800 text-white text-center p-4 mt-8">
+                        <p>&copy; 2025 EcoCycle Global. Bütün hüquqlar qorunur.</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        // Giriş və Qeydiyyat Səhifəsi
+        const AuthPage = ({ onLogin, onRegister, onNavigateToHome }) => {
+            const [isLoginMode, setIsLoginMode] = React.useState(true);
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [selectedRole, setSelectedRole] = React.useState('smallSeller'); // Varsayılan rol
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // Real tətbiqdə burada serverə sorğu göndəriləcək
+                const name = email.split('@')[0]; // Sadəcə nümunə üçün ad
+                if (isLoginMode) {
+                    console.log('Giriş cəhdi:', email, password, selectedRole);
+                    onLogin(selectedRole, name);
+                } else {
+                    console.log('Qeydiyyat cəhdi:', email, password, selectedRole);
+                    onRegister(selectedRole, name);
+                }
+            };
+
+            // Google ilə giriş funksiyası (yer tutucu)
+            const handleGoogleAuth = () => {
+                console.log('Google ilə giriş cəhdi...');
+                // Real tətbiqdə Google OAuth prosesi burada baş verəcək
+                // Uğurlu olduqda: onLogin(userRole, userName);
+                alert('Google ilə giriş funksiyası hələ aktiv deyil. Zəhmət olmasa email/şifrə ilə daxil olun.');
+            };
+
+            return (
+                <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+                    <h2 className="text-3xl font-bold text-center text-green-700 mb-6">
+                        {isLoginMode ? 'Giriş' : 'Qeydiyyat'}
+                    </h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                                Email:
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                placeholder="email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+                                Şifrə:
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                placeholder="********"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="role" className="block text-gray-700 text-sm font-bold mb-2">
+                                Rolunuz:
+                            </label>
+                            <select
+                                id="role"
+                                className="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value)}
+                            >
+                                <option value="smallSeller">Kiçik Satıcı (Fərdi)</option>
+                                <option value="businessman">Biznesmen (Toplama Mərkəzi)</option>
+                                <option value="factory">Zavod (Emalçı)</option>
+                                <option value="sponsor">Sponsor</option>
+                                <option value="advertiser">Reklamçı</option>
+                                <option value="deviceSeller">Cihaz Satıcı</option>
+                            </select>
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                        >
+                            {isLoginMode ? 'Giriş Et' : 'Qeydiyyatdan Keç'}
+                        </button>
+                    </form>
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => setIsLoginMode(!isLoginMode)}
+                            className="text-green-600 hover:underline text-sm"
+                        >
+                            {isLoginMode ? 'Hesabınız yoxdur? Qeydiyyatdan keçin' : 'Artıq hesabınız var? Giriş edin'}
+                        </button>
+                        <div className="my-4 flex items-center justify-center">
+                            <span className="border-b w-1/4 lg:w-1/3"></span>
+                            <span className="text-xs text-gray-500 uppercase mx-2">və ya</span>
+                            <span className="border-b w-1/4 lg:w-1/3"></span>
+                        </div>
+                        <button
+                            onClick={handleGoogleAuth}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md flex items-center justify-center space-x-2 transition duration-300 ease-in-out"
+                        >
+                            {/* Google ikonu üçün placeholder */}
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12.0003 4.75C14.0503 4.75 15.8303 5.44 17.2403 6.72L20.0003 3.96C17.9303 2 15.1103 1 12.0003 1C7.88033 1 4.24033 3.46 2.45033 7.04L5.70033 9.64C6.54033 7.05 9.03033 4.75 12.0003 4.75Z" fill="#EA4335"/>
+                                <path d="M23.0003 12.00C23.0003 11.34 22.9403 10.68 22.8203 10.04H12.0003V14.04H18.4803C18.1703 15.61 17.2603 16.94 16.0003 17.89L16.0003 20.59L19.7003 20.59C21.7003 18.66 23.0003 15.92 23.0003 12.00Z" fill="#4285F4"/>
+                                <path d="M5.70029 14.36C5.43029 13.69 5.28029 12.86 5.28029 12.00C5.28029 11.14 5.43029 10.31 5.70029 9.64L2.45029 7.04C1.65029 8.61 1.18029 10.29 1.18029 12.00C1.18029 13.71 1.65029 15.39 2.45029 16.96L5.70029 14.36Z" fill="#FBBC04"/>
+                                <path d="M12.0003 20.75C15.0003 20.75 17.5003 19.73 19.7003 17.89L16.0003 14.96C15.0403 15.65 13.6803 16.14 12.0003 16.14C9.03033 16.14 6.54033 13.84 5.70033 11.25L2.45033 13.85C4.24033 17.43 7.88033 19.89 12.0003 19.89C12.0003 19.89 12.0003 20.75 12.0003 20.75Z" fill="#34A853"/>
+                            </svg>
+                            <span>Google ilə Giriş</span>
+                        </button>
+                        <button
+                            onClick={onNavigateToHome}
+                            className="mt-4 text-gray-600 hover:underline text-sm"
+                        >
+                            Ana Səhifəyə Qayıt
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Ana Səhifə Komponenti
+        const HomePage = ({ isLoggedIn, onNavigateToAuth, onNavigateToDashboard }) => {
+            // Reklam məlumatları
+            const ads = [
+                {
+                    id: 1,
+                    title: "Əsas Sponsorumuz: Yaşıl Gələcək Fondu",
+                    description: "Planetimizi qorumaq üçün bizimlə birləşin!",
+                    image: "https://placehold.co/600x200/4CAF50/FFFFFF?text=Yaşıl+Gələcək+Fondu",
+                    link: "#"
+                },
+                {
+                    id: 2,
+                    title: "Yeni Texnologiya: EcoSort AI",
+                    description: "Tullantılarınızı süni intellektlə çeşidləyin!",
+                    image: "https://placehold.co/600x200/2196F3/FFFFFF?text=EcoSort+AI",
+                    link: "#"
+                },
+                {
+                    id: 3,
+                    title: "Təkrar Emal Cihazları: SmartRecycle Solutions",
+                    description: "Biznesiniz üçün ən yaxşı təkrar emal avadanlıqları!",
+                    image: "https://placehold.co/600x200/FF9800/FFFFFF?text=SmartRecycle+Solutions",
+                    link: "#"
+                }
+            ];
+
+            // Cari reklamın indeksini saxlayır
+            const [currentAdIndex, setCurrentAdIndex] = React.useState(0);
+
+            // Reklamı avtomatik dəyişmək üçün useEffect
+            React.useEffect(() => {
+                const interval = setInterval(() => {
+                    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % ads.length);
+                }, 5000); // Hər 5 saniyədən bir dəyişir
+
+                return () => clearInterval(interval); // Komponent silindikdə intervalı təmizləyir
+            }, [ads.length]);
+
+            const currentAd = ads[currentAdIndex];
+
+            return (
+                <div className="space-y-12">
+                    {/* Sponsor Reklamları Bölməsi - Yalnız bir reklam xanası və növbə ilə dəyişir */}
+                    <section className="bg-gradient-to-r from-green-500 to-green-700 text-white p-8 rounded-xl shadow-lg text-center">
+                        <h2 className="text-4xl font-extrabold mb-4">Sponsor Reklamları</h2>
+                        <p className="text-xl mb-6">Qlobal təkrar emal hərəkatına dəstək olan şirkətlər.</p>
+                        <div className="flex justify-center items-center">
+                            <a href={currentAd.link} target="_blank" rel="noopener noreferrer" className="block w-full max-w-2xl rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+                                <img src={currentAd.image} alt={currentAd.title} className="w-full h-auto object-cover" />
+                                <div className="p-4 bg-white text-gray-800">
+                                    <h3 className="text-2xl font-semibold mb-2">{currentAd.title}</h3>
+                                    <p className="text-gray-600">{currentAd.description}</p>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
+                    {/* Platforma Haqqında Bölmə */}
+                    <section className="bg-white p-8 rounded-xl shadow-lg">
+                        <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">
+                            EcoCycle Global: Tullantıları Dəyərə Çevirin
+                        </h2>
+                        <p className="text-lg text-gray-700 mb-8 text-center">
+                            Biz təkrar emal prosesini sadələşdirmək, kiçik satıcılardan tutmuş böyük zavodlara qədər hər kəsi birləşdirmək üçün qlobal bir platforma təklif edirik.
+                        </p>
+
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {/* Zavodlar üçün */}
+                            <div className="bg-green-50 p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out">
+                                <h3 className="text-xl font-semibold text-green-800 mb-3">Zavodlar</h3>
+                                <p className="text-gray-700">
+                                    Təkrar emal materialları üçün etibarlı təchizatçılar tapın. İllik ödənişlə premium profil yaradın, tələblərinizi yerləşdirin və görünürlüyünüzü artırın.
+                                </p>
+                                <ul className="list-disc list-inside text-gray-600 mt-4">
+                                    <li>Materiala görə kateqoriyalar</li>
+                                    <li>Coğrafi axtarış</li>
+                                    <li>Genişləndirilmiş profil</li>
+                                </ul>
+                            </div>
+
+                            {/* Biznesmenlər üçün */}
+                            <div className="bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out">
+                                <h3 className="text-xl font-semibold text-blue-800 mb-3">Biznesmenlər (Toplama Mərkəzləri)</h3>
+                                <p className="text-gray-700">
+                                    Kiçik satıcılardan material toplayın və zavodlara sataraq gəlir əldə edin. Logistika dəstəyi və bazar məlumatları ilə işinizi genişləndirin.
+                                </p>
+                                <ul className="list-disc list-inside text-gray-600 mt-4">
+                                    <li>Alış/Satış elanları</li>
+                                    <li>Material kataloqu</li>
+                                    <li>Reytinq sistemi</li>
+                                </ul>
+                            </div>
+
+                            {/* Kiçik Satıcılar üçün */}
+                            <div className="bg-yellow-50 p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out">
+                                <h3 className="text-xl font-semibold text-yellow-800 mb-3">Kiçik Satıcılar (Fərdi Toplayıcılar)</h3>
+                                <p className="text-gray-700">
+                                    Plastik, dəmir, alüminium, kağız, rezin və s. ataraq pul qazanın. Yaxınlıqdakı ağıllı aparatları və toplama məntəqələrini tapın.
+                                </p>
+                                <ul className="list-disc list-inside text-gray-600 mt-4">
+                                    <li>Aparat xəritəsi</li>
+                                    <li>Balans izləmə</li>
+                                    <li>Qiymət məlumatı</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Cihaz Reklamları Bölməsi */}
+                    <section className="bg-white p-8 rounded-xl shadow-lg">
+                        <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">
+                            Təkrar Emal Cihazları və Texnologiyaları
+                        </h2>
+                        <p className="text-lg text-gray-700 mb-8 text-center">
+                            Təkrar emal prosesinizi optimallaşdırmaq üçün ən son texnologiyaları və avadanlıqları kəşf edin.
+                        </p>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {/* Cihaz reklamları üçün yer tutucular */}
+                            <div className="bg-gray-50 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                                <img
+                                    src="https://placehold.co/150x100/E0E0E0/333333?text=RVM+Aparatı"
+                                    alt="RVM Aparatı"
+                                    className="mb-4 rounded-md"
+                                />
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Ağıllı Təkrar Emal Aparatı</h3>
+                                <p className="text-gray-600">
+                                    Plastik və metal butulkaları qəbul edən ən son nəsil RVM.
+                                </p>
+                                <button className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                                    Daha Ətraflı
+                                </button>
+                            </div>
+                            <div className="bg-gray-50 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                                <img
+                                    src="https://placehold.co/150x100/E0E0E0/333333?text=Sıxma+Presi"
+                                    alt="Sıxma Presi"
+                                    className="mb-4 rounded-md"
+                                />
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Hidravlik Sıxma Presi</h3>
+                                <p className="text-gray-600">
+                                    Kağız və karton tullantıların həcmini azaltmaq üçün ideal həll.
+                                </p>
+                                <button className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                                    Daha Ətraflı
+                                </button>
+                            </div>
+                            <div className="bg-gray-50 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                                <img
+                                    src="https://placehold.co/150x100/E0E0E0/333333?text=Çeşidləmə+Sistemi"
+                                    alt="Çeşidləmə Sistemi"
+                                    className="mb-4 rounded-md"
+                                />
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Avtomatik Çeşidləmə Sistemi</h3>
+                                <p className="text-gray-600">
+                                    Müxtəlif materialları yüksək dəqiqliklə ayıran sənaye sistemi.
+                                </p>
+                                <button className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                                    Daha Ətraflı
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Giriş/Qeydiyyat Çağırışı */}
+                    {!isLoggedIn && (
+                        <section className="text-center mt-12">
+                            <p className="text-xl text-gray-700 mb-6">
+                                Platformamızın bütün imkanlarından faydalanmaq üçün indi qoşulun!
+                            </p>
+                            <button
+                                onClick={onNavigateToAuth}
+                                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg text-xl transition duration-300 ease-in-out"
+                            >
+                                Qeydiyyatdan Keç / Giriş Et
+                            </button>
+                        </section>
+                    )}
+                </div>
+            );
+        };
+
+        // İdarəetmə Paneli Komponenti
+        const DashboardPage = ({ userRole, userName, onLogout }) => {
+            // Rol əsasında komponentləri seçir
+            const renderDashboardContent = () => {
+                switch (userRole) {
+                    case 'factory':
+                        return <FactoryDashboard userName={userName} />;
+                    case 'businessman':
+                        return <BusinessmanDashboard userName={userName} />;
+                    case 'smallSeller':
+                        return <SmallSellerDashboard userName={userName} />;
+                    case 'sponsor':
+                    case 'advertiser':
+                        return <SponsorAdvertiserDashboard userName={userName} />;
+                    case 'deviceSeller':
+                        return <DeviceSellerDashboard userName={userName} />;
+                    default:
+                        return <div className="text-center text-xl text-gray-600">Rolunuz müəyyən edilmədi.</div>;
+                }
+            };
+
+            return (
+                <div className="bg-white p-8 rounded-xl shadow-lg">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-green-700">
+                            Xoş gəlmisiniz, {userName}! ({userRole === 'factory' ? 'Zavod' : userRole === 'businessman' ? 'Biznesmen' : userRole === 'smallSeller' ? 'Kiçik Satıcı' : userRole === 'sponsor' ? 'Sponsor' : userRole === 'advertiser' ? 'Reklamçı' : userRole === 'deviceSeller' ? 'Cihaz Satıcı' : userRole} Paneli)
+                        </h2>
+                        <button
+                            onClick={onLogout}
+                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                        >
+                            Çıxış
+                        </button>
+                    </div>
+                    {renderDashboardContent()}
+                </div>
+            );
+        };
+
+        // Xəritə Komponenti (Google Maps yer tutucusu)
+        const MapComponent = ({ title, locationType }) => {
+            return (
+                <div className="bg-gray-50 p-6 rounded-lg shadow-md">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">{title} Xəritəsi</h3>
+                    <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
+                        {/* Google Maps iframe yer tutucusu. API açarı tələb olunur. */}
+                        <iframe
+                            title="Google Map Placeholder"
+                            width="100%"
+                            height="100%"
+                            loading="lazy"
+                            allowFullScreen
+                            src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${locationType}+locations`}
+                            // Yuxarıdakı 'YOUR_API_KEY' yerinə öz Google Maps API açarınızı daxil etməlisiniz.
+                            // 'q' parametri axtarış üçün yer tutucudur.
+                            // Alternativ olaraq, sadə bir şəkil istifadə edə bilərsiniz:
+                            // <img src="https://placehold.co/600x400/E0E0E0/333333?text=Xəritə+Yer+Tutucusu" alt="Xəritə" className="w-full h-full object-cover" />
+                        ></iframe>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-center text-lg">
+                            <p>Google Xəritə İnteqrasiyası (API açarı tələb olunur)</p>
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3">
+                        Bu xəritə zavodların və ya toplama məntəqələrinin yerini göstərmək üçündür.
+                    </p>
+                </div>
+            );
+        };
+
+        // Zavod Paneli
+        const FactoryDashboard = ({ userName }) => {
+            const [materialNeeds, setMaterialNeeds] = React.useState([
+                { id: 1, material: 'Plastik (PET)', quantity: '100 ton/ay', quality: 'Təmiz, sıxılmış', status: 'Aktiv' },
+                { id: 2, material: 'Alüminium', quantity: '50 ton/ay', quality: 'Təmiz bankalar', status: 'Aktiv' },
+            ]);
+            const [newNeed, setNewNeed] = React.useState({ material: '', quantity: '', quality: '' });
+
+            const categories = ['Plastik', 'Dəmir', 'Mis', 'Alüminium', 'Kağız', 'Rezin', 'Elektronika', 'Şüşə'];
+            const products = [
+                { name: 'Təkrar Emal Olunmuş PET Qranullar', category: 'Plastik' },
+                { name: 'Təkrar Emal Olunmuş Alüminium Külçələr', category: 'Alüminium' },
+                { name: 'Təkrar Emal Olunmuş Kağız Pulpası', category: 'Kağız' },
+            ];
+
+            const handleAddNeed = (e) => {
+                e.preventDefault();
+                if (newNeed.material && newNeed.quantity) {
+                    setMaterialNeeds([...materialNeeds, { ...newNeed, id: materialNeeds.length + 1, status: 'Aktiv' }]);
+                    setNewNeed({ material: '', quantity: '', quality: '' });
+                    alert('Yeni tələbat əlavə edildi! (Bu, mock funksionallıqdır)');
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <p className="text-gray-700">
+                        Zavod panelinizə xoş gəlmisiniz, {userName}. Burada material tələblərinizi idarə edə, təchizatçılarla əlaqə qura və profilinizi yeniləyə bilərsiniz.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Zavod Məlumatları */}
+                        <div className="bg-green-50 p-6 rounded-lg shadow-md">
+                            <h3 className="text-xl font-semibold text-green-800 mb-4">Zavod Məlumatlarınız</h3>
+                            <p><strong>Ad:</strong> {userName} Təkrar Emal Zavodu</p>
+                            <p><strong>İllik Ödəniş Statusu:</strong> Aktiv (Premium)</p>
+                            <p><strong>Əsas Fəaliyyət:</strong> Plastik və Metal Emalı</p>
+                            <p><strong>Sertifikatlar:</strong> ISO 14001, CE</p>
+                            <button className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
+                                Profilimi Redaktə Et
+                            </button>
+                        </div>
+
+                        {/* Kateqoriyalar və Məhsullar */}
+                        <div className="bg-green-50 p-6 rounded-lg shadow-md">
+                            <h3 className="text-xl font-semibold text-green-800 mb-4">Emal Etdiyiniz Material Kateqoriyaları</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.map((cat, index) => (
+                                    <span key={index} className="bg-green-200 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
+                                        {cat}
+                                    </span>
+                                ))}
+                            </div>
+                            <h3 className="text-xl font-semibold text-green-800 mt-6 mb-4">İstehsal Etdiyiniz Məhsullar</h3>
+                            <ul className="list-disc list-inside text-gray-700">
+                                {products.map((prod, index) => (
+                                    <li key={index}>{prod.name} ({prod.category})</li>
+                                ))}
+                            </ul>
+                            <button className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
+                                Məhsul Əlavə Et
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Material Tələbləri */}
+                    <div className="bg-green-50 p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-green-800 mb-4">Material Tələbləriniz</h3>
+                        <ul className="space-y-2 mb-4">
+                            {materialNeeds.map((need) => (
+                                <li key={need.id} className="bg-green-100 p-3 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium">{need.material}</p>
+                                        <p className="text-sm text-gray-600">Miqdar: {need.quantity}</p>
+                                        <p className="text-sm text-gray-600">Keyfiyyət: {need.quality}</p>
+                                    </div>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${need.status === 'Aktiv' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                                        {need.status}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        <form onSubmit={handleAddNeed} className="space-y-3">
+                            <h4 className="font-semibold text-gray-700">Yeni Tələbat Əlavə Et</h4>
+                            <input
+                                type="text"
+                                placeholder="Material növü (məsələn, PET plastik)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                value={newNeed.material}
+                                onChange={(e) => setNewNeed({ ...newNeed, material: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Miqdar (məsələn, 50 ton/ay)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                value={newNeed.quantity}
+                                onChange={(e) => setNewNeed({ ...newNeed, quantity: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Keyfiyyət tələbi (məsələn, təmiz, sıxılmış)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+                                value={newNeed.quality}
+                                onChange={(e) => setNewNeed({ ...newNeed, quality: e.target.value })}
+                            />
+                            <button type="submit" className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
+                                Tələbatı Əlavə Et
+                            </button>
+                        </form>
+                    </div>
+
+                    <MapComponent title="Zavodunuzun" locationType="factory" />
+                </div>
+            );
+        };
+
+        // Biznesmen Paneli
+        const BusinessmanDashboard = ({ userName }) => {
+            const [collectionPoints, setCollectionPoints] = React.useState([
+                { id: 1, name: 'Bakı Toplama Mərkəzi', material: 'Plastik, Kağız', status: 'Açıq', location: 'Bakı, Azərbaycan' },
+                { id: 2, name: 'Gəncə Metal Qəbulu', material: 'Dəmir, Alüminium', status: 'Açıq', location: 'Gəncə, Azərbaycan' },
+            ]);
+            const [newPoint, setNewPoint] = React.useState({ name: '', material: '', location: '' });
+
+            const [buyListings, setBuyListings] = React.useState([
+                { id: 1, material: 'Plastik Butulkalar', quantity: '1 ton', price: '0.25 AZN/kq', status: 'Aktiv' },
+            ]);
+            const [sellListings, setSellListings] = React.useState([
+                { id: 1, material: 'Sıxılmış Alüminium', quantity: '5 ton', price: '1.50 AZN/kq', status: 'Aktiv' },
+            ]);
+
+            const handleAddPoint = (e) => {
+                e.preventDefault();
+                if (newPoint.name && newPoint.material && newPoint.location) {
+                    setCollectionPoints([...collectionPoints, { ...newPoint, id: collectionPoints.length + 1, status: 'Açıq' }]);
+                    setNewPoint({ name: '', material: '', location: '' });
+                    alert('Yeni toplama məntəqəsi əlavə edildi! (Bu, mock funksionallıqdır)');
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <p className="text-gray-700">
+                        Biznesmen panelinizə xoş gəlmisiniz, {userName}. Toplama məntəqələrinizi idarə edə, material alış-satış elanları yerləşdirə bilərsiniz.
+                    </p>
+                    <div className="bg-blue-50 p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-blue-800 mb-4">Toplama Məntəqələriniz</h3>
+                        <ul className="space-y-2 mb-4">
+                            {collectionPoints.map((point) => (
+                                <li key={point.id} className="bg-blue-100 p-3 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium">{point.name}</p>
+                                        <p className="text-sm text-gray-600">Materiallar: {point.material}</p>
+                                        <p className="text-sm text-gray-600">Yer: {point.location}</p>
+                                    </div>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${point.status === 'Açıq' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                                        {point.status}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        <form onSubmit={handleAddPoint} className="space-y-3">
+                            <h4 className="font-semibold text-gray-700">Yeni Məntəqə Əlavə Et</h4>
+                            <input
+                                type="text"
+                                placeholder="Məntəqə adı"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={newPoint.name}
+                                onChange={(e) => setNewPoint({ ...newPoint, name: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Qəbul edilən materiallar (məsələn, Plastik, Kağız)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={newPoint.material}
+                                onChange={(e) => setNewPoint({ ...newPoint, material: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Yerləşmə (məsələn, Bakı, Azərbaycan)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={newPoint.location}
+                                onChange={(e) => setNewPoint({ ...newPoint, location: e.target.value })}
+                                required
+                            />
+                            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                                Məntəqəni Əlavə Et
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="bg-blue-50 p-6 rounded-lg shadow-md">
+                            <h3 className="text-xl font-semibold text-blue-800 mb-4">Material Alış Elanlarınız</h3>
+                            <ul className="space-y-2">
+                                {buyListings.map((listing) => (
+                                    <li key={listing.id} className="bg-blue-100 p-3 rounded-lg flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium">{listing.material}</p>
+                                            <p className="text-sm text-gray-600">Miqdar: {listing.quantity}</p>
+                                        </div>
+                                        <span className="text-sm font-semibold">{listing.price}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                                Yeni Alış Elanı
+                            </button>
+                        </div>
+
+                        <div className="bg-blue-50 p-6 rounded-lg shadow-md">
+                            <h3 className="text-xl font-semibold text-blue-800 mb-4">Material Satış Elanlarınız</h3>
+                            <ul className="space-y-2">
+                                {sellListings.map((listing) => (
+                                    <li key={listing.id} className="bg-blue-100 p-3 rounded-lg flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium">{listing.material}</p>
+                                            <p className="text-sm text-gray-600">Miqdar: {listing.quantity}</p>
+                                        </div>
+                                        <span className="text-sm font-semibold">{listing.price}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                                Yeni Satış Elanı
+                            </button>
+                        </div>
+                    </div>
+                    <MapComponent title="Toplama Məntəqələrinizin" locationType="collection+point" />
+                </div>
+            );
+        };
+
+        // Kiçik Satıcı Paneli
+        const SmallSellerDashboard = ({ userName }) => {
+            const [balance, setBalance] = React.useState(15.75); // Nümunə balans
+            const [recentTransactions, setRecentTransactions] = React.useState([
+                { id: 1, material: 'Plastik Butulka', amount: 0.50, date: '01.07.2025' },
+                { id: 2, material: 'Alüminium Banka', amount: 0.75, date: '30.06.2025' },
+                { id: 3, material: 'Kağız', amount: 0.25, date: '29.06.2025' },
+            ]);
+
+            // Mock funksiya: Aparatdan material qəbul etməyi simulyasiya edir
+            const simulateMaterialDrop = () => {
+                const newAmount = parseFloat((Math.random() * (1.0 - 0.1) + 0.1).toFixed(2)); // 0.10 - 1.00 AZN arası
+                const newMaterial = ['Plastik Butulka', 'Alüminium Banka', 'Dəmir Qutu'][Math.floor(Math.random() * 3)];
+                setBalance(prevBalance => parseFloat((prevBalance + newAmount).toFixed(2)));
+                setRecentTransactions(prevTransactions => [
+                    { id: prevTransactions.length + 1, material: newMaterial, amount: newAmount, date: new Date().toLocaleDateString('az-AZ') },
+                    ...prevTransactions
+                ].slice(0, 5)); // Son 5 əməliyyatı göstər
+                alert(`Aparatdan ${newMaterial} atıldı! Balansınıza ${newAmount.toFixed(2)} AZN əlavə edildi.`);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <p className="text-gray-700">
+                        Kiçik satıcı panelinizə xoş gəlmisiniz, {userName}. Balansınızı izləyə və yaxınlıqdakı təkrar emal aparatlarını tapa bilərsiniz.
+                    </p>
+                    <div className="bg-yellow-50 p-6 rounded-lg shadow-md text-center">
+                        <h3 className="text-xl font-semibold text-yellow-800 mb-4">Cari Balansınız</h3>
+                        <p className="text-5xl font-bold text-yellow-700 mb-4">{balance} AZN</p>
+                        <button className="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg" onClick={() => alert('Balans çıxarış tələbi göndərildi! (Mock funksionallıqdır)')}>
+                            Balansı Çıxar
+                        </button>
+                        <button className="ml-4 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg" onClick={simulateMaterialDrop}>
+                            Material At (Simulyasiya)
+                        </button>
+                    </div>
+                    <div className="bg-yellow-50 p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-yellow-800 mb-4">Son Əməliyyatlar</h3>
+                        <ul className="space-y-2">
+                            {recentTransactions.map((tx) => (
+                                <li key={tx.id} className="bg-yellow-100 p-3 rounded-lg flex justify-between items-center">
+                                    <span>{tx.material}</span>
+                                    <span>+{tx.amount.toFixed(2)} AZN ({tx.date})</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <MapComponent title="Yaxınlıqdakı Təkrar Emal Aparatları" locationType="recycling+machine" />
+                </div>
+            );
+        };
+
+        // Sponsor və Reklamçı Paneli
+        const SponsorAdvertiserDashboard = ({ userName }) => {
+            const [adCampaigns, setAdCampaigns] = React.useState([
+                { id: 1, name: 'Yaşıl Gələcək Kampaniyası', status: 'Aktiv', views: '1.2M', clicks: '15K' },
+                { id: 2, name: 'Yeni Ekoloji Məhsul', status: 'Gözləmədə', views: '0', clicks: '0' },
+            ]);
+            const [newCampaign, setNewCampaign] = React.useState({ name: '', target: '', budget: '' });
+
+            const handleCreateCampaign = (e) => {
+                e.preventDefault();
+                if (newCampaign.name && newCampaign.target && newCampaign.budget) {
+                    setAdCampaigns([...adCampaigns, { ...newCampaign, id: adCampaigns.length + 1, status: 'Gözləmədə', views: '0', clicks: '0' }]);
+                    setNewCampaign({ name: '', target: '', budget: '' });
+                    alert('Yeni kampaniya yaradıldı! (Bu, mock funksionallıqdır)');
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <p className="text-gray-700">
+                        Sponsor/Reklamçı panelinizə xoş gəlmisiniz, {userName}. Reklam kampaniyalarınızı idarə edə və hesabatları yoxlaya bilərsiniz.
+                    </p>
+                    <div className="bg-purple-50 p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-purple-800 mb-4">Reklam Kampaniyalarınız</h3>
+                        <ul className="space-y-2 mb-4">
+                            {adCampaigns.map((campaign) => (
+                                <li key={campaign.id} className="bg-purple-100 p-3 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium">{campaign.name}</p>
+                                        <p className="text-sm text-gray-600">Status: {campaign.status}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600">Görüntü: {campaign.views}</p>
+                                        <p className="text-sm text-gray-600">Klik: {campaign.clicks}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        <form onSubmit={handleCreateCampaign} className="space-y-3">
+                            <h4 className="font-semibold text-gray-700">Yeni Kampaniya Yarat</h4>
+                            <input
+                                type="text"
+                                placeholder="Kampaniya adı"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                value={newCampaign.name}
+                                onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Hədəf auditoriya (məsələn, zavodlar, kiçik satıcılar)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                value={newCampaign.target}
+                                onChange={(e) => setNewCampaign({ ...newCampaign, target: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Büdcə (məsələn, 1000 AZN)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                value={newCampaign.budget}
+                                onChange={(e) => setNewCampaign({ ...newCampaign, budget: e.target.value })}
+                                required
+                            />
+                            <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg">
+                                Kampaniyanı Yarat
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Cihaz Satıcı Paneli
+        const DeviceSellerDashboard = ({ userName }) => {
+            const [listedDevices, setListedDevices] = React.useState([
+                { id: 1, name: 'EcoRVM 2.0', category: 'Ağıllı Aparat', status: 'Aktiv', inquiries: 12, price: '15000 AZN' },
+                { id: 2, name: 'MegaBaler 5000', category: 'Sıxma Presi', status: 'Aktiv', inquiries: 8, price: '25000 AZN' },
+                { id: 3, name: 'SmartSorter Pro', category: 'Çeşidləmə Sistemi', status: 'Gözləmədə', inquiries: 3, price: '40000 AZN' },
+            ]);
+            const [newDevice, setNewDevice] = React.useState({ name: '', category: '', price: '' });
+
+            const deviceCategories = ['Ağıllı Aparat', 'Çeşidləmə Sistemi', 'Sıxma Presi', 'Şredder', 'Yuma Sistemi'];
+
+            const handleAddDevice = (e) => {
+                e.preventDefault();
+                if (newDevice.name && newDevice.category && newDevice.price) {
+                    setListedDevices([...listedDevices, { ...newDevice, id: listedDevices.length + 1, status: 'Gözləmədə', inquiries: 0 }]);
+                    setNewDevice({ name: '', category: '', price: '' });
+                    alert('Yeni cihaz əlavə edildi! (Bu, mock funksionallıqdır)');
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <p className="text-gray-700">
+                        Cihaz satıcı panelinizə xoş gəlmisiniz, {userName}. Məhsullarınızı siyahıya ala və sorğuları idarə edə bilərsiniz.
+                    </p>
+                    <div className="bg-orange-50 p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-orange-800 mb-4">Məhsul Kateqoriyaları</h3>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {deviceCategories.map((cat, index) => (
+                                <span key={index} className="bg-orange-200 text-orange-800 text-sm font-medium px-3 py-1 rounded-full">
+                                    {cat}
+                                </span>
+                            ))}
+                        </div>
+                        <h3 className="text-xl font-semibold text-orange-800 mt-6 mb-4">Siyahıya Alınmış Cihazlarınız</h3>
+                        <ul className="space-y-2 mb-4">
+                            {listedDevices.map((device) => (
+                                <li key={device.id} className="bg-orange-100 p-3 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium">{device.name}</p>
+                                        <p className="text-sm text-gray-600">Kateqoriya: {device.category}</p>
+                                        <p className="text-sm text-gray-600">Qiymət: {device.price}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600">Status: {device.status}</p>
+                                        <p className="text-sm text-gray-600">Sorğular: {device.inquiries}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        <form onSubmit={handleAddDevice} className="space-y-3">
+                            <h4 className="font-semibold text-gray-700">Yeni Cihaz Əlavə Et</h4>
+                            <input
+                                type="text"
+                                placeholder="Cihaz adı"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                value={newDevice.name}
+                                onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
+                                required
+                            />
+                            <select
+                                className="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                value={newDevice.category}
+                                onChange={(e) => setNewDevice({ ...newDevice, category: e.target.value })}
+                                required
+                            >
+                                <option value="">Kateqoriya seçin</option>
+                                {deviceCategories.map((cat, index) => (
+                                    <option key={index} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="text"
+                                placeholder="Qiymət (məsələn, 15000 AZN)"
+                                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                value={newDevice.price}
+                                onChange={(e) => setNewDevice({ ...newDevice, price: e.target.value })}
+                                required
+                            />
+                            <button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg">
+                                Cihazı Əlavə Et
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // React tətbiqini "root" div-inə render edin
+        // ReactDOM.render(
+        //     <App />,
+        //     document.getElementById('root')
+        // );
+
+        // React 18 üçün yeni API: createRoot istifadə edin
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
